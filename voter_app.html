@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Dónde voto? — Elecciones Perú 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 16px 40px}
+.card{background:#fff;border-radius:16px;padding:24px 20px;width:100%;max-width:420px;box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+.header{text-align:center;margin-bottom:20px}
+.flag{font-size:32px;margin-bottom:8px}
+h1{font-size:20px;font-weight:600;color:#111;margin-bottom:4px}
+.subtitle{font-size:13px;color:#666}
+.location-banner{background:#EBF4FF;border-radius:10px;padding:10px 14px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start}
+.location-banner svg{flex-shrink:0;margin-top:1px}
+.location-banner p{font-size:13px;color:#1a4b8c;line-height:1.4}
+.location-banner strong{font-weight:600}
+label{display:block;font-size:13px;font-weight:500;color:#444;margin-bottom:6px}
+.input-row{display:flex;gap:8px;margin-bottom:16px}
+input[type=number]{flex:1;font-size:18px;padding:11px 14px;border:1.5px solid #ddd;border-radius:10px;outline:none;-moz-appearance:textfield;background:#fafafa;color:#111}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+input[type=number]:focus{border-color:#1a56db;background:#fff}
+button.search-btn{padding:11px 18px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+button.search-btn:active{opacity:0.85}
+.result{border-radius:12px;overflow:hidden;border:1px solid #e0e0e0}
+.result-header{padding:14px 16px;display:flex;align-items:center;gap:12px}
+.result-header .icon-circle{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.result-header .person-name{font-size:15px;font-weight:600;color:#fff}
+.result-header .dni-label{font-size:12px;color:rgba(255,255,255,0.8)}
+.result-body{padding:14px 16px;background:#fff}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:14px}
+.info-row:last-child{border-bottom:none}
+.info-label{color:#888;display:flex;align-items:center;gap:6px}
+.info-value{font-weight:600;color:#111;text-align:right}
+.loc-box{margin-top:12px;border-radius:10px;padding:12px 14px}
+.loc-box .loc-title{font-size:14px;font-weight:600;margin-bottom:3px}
+.loc-box .loc-detail{font-size:13px;line-height:1.5}
+.reset-row{text-align:center;margin-top:12px}
+.reset-btn{background:none;border:none;color:#888;font-size:13px;cursor:pointer;padding:6px 12px}
+.error-box{background:#FEF2F2;border:1px solid #fca5a5;border-radius:10px;padding:12px 14px;font-size:14px;color:#b91c1c;display:flex;gap:10px;align-items:flex-start}
+.hint{font-size:12px;color:#aaa;text-align:center;margin-top:12px}
+.loading{text-align:center;padding:20px;color:#888;font-size:14px}
+footer{margin-top:20px;font-size:12px;color:#aaa;text-align:center;max-width:420px}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div class="flag">🇵🇪</div>
+    <h1>¿Dónde voto?</h1>
+    <p class="subtitle">Segunda Elección Presidencial 2026<br>Domingo 7 de junio · 7:00 a.m. – 5:00 p.m.</p>
+  </div>
+
+  <div class="location-banner">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#1a56db" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    <p><strong>Miami Dade College – Kendall Campus</strong><br>11011 SW 104th St, Miami, FL 33176 · Estacionamiento gratuito</p>
+  </div>
+
+  <label for="dni">Ingresá tu número de DNI</label>
+  <div class="input-row">
+    <input type="number" id="dni" placeholder="Ej: 12345678" inputmode="numeric" onkeydown="if(event.key==='Enter')buscar()">
+    <button class="search-btn" onclick="buscar()" aria-label="Buscar">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="m21 21-4.35-4.35"/></svg>
+    </button>
+  </div>
+
+  <div id="resultado"></div>
+  <p class="hint" id="hint">Ingresá tu DNI y presioná buscar</p>
+</div>
+
+<footer>Consulado General del Perú en Miami · Uso oficial</footer>
+
+<script>
+const MESAS = {
+  86419:['gym','A','1'],86420:['gym','A','1'],86421:['gym','A','1'],86422:['gym','A','1'],
+  86423:['gym','A','1'],86424:['gym','A','1'],86425:['gym','A','1'],86426:['gym','A','1'],
+  86427:['gym','A','2'],86428:['gym','A','2'],86429:['gym','A','2'],86430:['gym','A','2'],
+  86431:['gym','A','2'],86432:['gym','A','2'],86433:['gym','A','2'],86434:['gym','A','2'],
+  86435:['gym','A','3'],86436:['gym','A','3'],86437:['gym','A','3'],86438:['gym','A','3'],
+  86439:['gym','A','3'],86440:['gym','A','3'],86441:['gym','A','3'],86442:['gym','A','3'],
+  86443:['gym','A','4'],86444:['gym','A','4'],86445:['gym','A','4'],86446:['gym','A','4'],
+  86447:['gym','A','4'],86448:['gym','A','4'],86449:['gym','A','4'],86450:['gym','A','4'],
+  86451:['gym','B','5'],86452:['gym','B','5'],86453:['gym','B','5'],86454:['gym','B','5'],
+  86455:['gym','B','5'],86456:['gym','B','5'],86457:['gym','B','5'],86458:['gym','B','5'],
+  86459:['gym','B','6'],86460:['gym','B','6'],86461:['gym','B','6'],86462:['gym','B','6'],
+  86463:['gym','B','6'],86464:['gym','B','6'],86465:['gym','B','6'],86466:['gym','B','6'],
+  86467:['gym','B','7'],86468:['gym','B','7'],86469:['gym','B','7'],86470:['gym','B','7'],
+  86471:['gym','B','7'],86472:['gym','B','7'],86473:['gym','B','7'],86474:['gym','B','7'],
+  86475:['gym','B','8'],86476:['gym','B','8'],86477:['gym','B','8'],86478:['gym','B','8'],
+  86479:['gym','B','8'],86480:['gym','B','8'],86481:['gym','B','8'],86482:['gym','B','8'],
+  86483:['r','2','Hall 2do Piso'],86484:['r','2','Hall 2do Piso'],
+  86485:['r','2','Aula R-250'],86486:['r','2','Aula R-250'],
+  86487:['r','2','Aula R-251'],86488:['r','2','Aula R-251'],
+  86489:['r','2','Aula R-252'],86490:['r','2','Aula R-252'],
+  86491:['r','2','Aula R-253'],86492:['r','2','Aula R-253'],
+  86493:['r','2','Aula R-254'],86494:['r','2','Aula R-254'],
+  86495:['r','2','Aula R-255'],86496:['r','2','Aula R-255'],
+  86497:['r','2','Aula R-256'],86498:['r','2','Aula R-256'],
+  86499:['r','2','Aula R-257'],86500:['r','2','Aula R-257'],
+  86501:['r','3','Hall 3er Piso'],86502:['r','3','Hall 3er Piso'],
+  86503:['r','3','Aula R-348'],86504:['r','3','Aula R-348'],
+  86505:['r','3','Aula R-349'],86506:['r','3','Aula R-349'],
+  86507:['r','3','Aula R-350'],86508:['r','3','Aula R-350'],
+  86509:['r','3','Aula R-351'],86510:['r','3','Aula R-351'],
+  86511:['r','3','Aula R-352'],86512:['r','3','Aula R-352'],
+  86513:['r','3','Aula R-353'],86514:['r','3','Aula R-353'],
+  86515:['r','3','Aula R-354'],86516:['r','3','Aula R-354'],
+  86517:['r','3','Aula R-355'],86518:['r','3','Aula R-355'],
+  86519:['r','4','Aula R-452'],86520:['r','4','Aula R-452'],
+  86521:['r','4','Sala de Conferencias R-402/403'],
+  86522:['r','4','Sala de Conferencias R-402/403'],
+  86523:['r','4','Sala de Conferencias R-402/403'],
+  86524:['r','4','Sala de Conferencias R-402/403'],
+  86525:['r','4','Sala de Conferencias R-402/403'],
+  86526:['r','4','Sala de Conferencias R-402/403'],
+  86527:['r','4','Sala de Conferencias R-402/403'],
+  86528:['r','4','Sala de Conferencias R-402/403']
+};
+
+let DB = null;
+let loading = false;
+
+async function loadDB(){
+  if(DB) return;
+  if(loading) return;
+  loading = true;
+  document.getElementById('hint').textContent = 'Cargando padrón electoral...';
+  try {
+    const r = await fetch('voters_array.json');
+    const arr = await r.json();
+    DB = {};
+    for(const row of arr) DB[row[0]] = row;
+    document.getElementById('hint').textContent = 'Padrón cargado. Ingresá tu DNI y buscá.';
+  } catch(e) {
+    document.getElementById('hint').textContent = 'Error al cargar el padrón. Recargá la página.';
+  }
+  loading = false;
+}
+
+loadDB();
+
+function buscar(){
+  const val = document.getElementById('dni').value.trim();
+  const res = document.getElementById('resultado');
+  document.getElementById('hint').textContent = '';
+
+  if(!val){ res.innerHTML = err('Por favor ingresá tu número de DNI.'); return; }
+
+  const dni = parseInt(val, 10);
+  if(isNaN(dni)){ res.innerHTML = err('El DNI debe ser un número.'); return; }
+
+  if(!DB){ res.innerHTML = err('El padrón aún se está cargando. Esperá un momento e intentá de nuevo.'); return; }
+
+  const row = DB[dni];
+  if(!row){ res.innerHTML = err('No encontramos ese DNI en el padrón del Consulado de Miami.<br><small>Verificá el número o consultá directamente en el Consulado.</small>'); return; }
+
+  const [, paterno, materno, nombres, mesa] = row;
+  const loc = MESAS[mesa];
+  if(!loc){ res.innerHTML = err('Mesa asignada no reconocida. Consultá en el Consulado.'); return; }
+
+  const [tipo, piso_ent, zona_aula] = loc;
+  let headerBg, iconHTML, locTitle, locDetail, locBg, locBorder, locTextDark, locTextMid;
+
+  if(tipo === 'gym'){
+    headerBg = '#166534';
+    locBg = '#f0fdf4'; locBorder = '#16a34a'; locTextDark = '#14532d'; locTextMid = '#15803d';
+    iconHTML = '<svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M8 7V5a2 2 0 014 0v2M16 7V5a2 2 0 00-4 0"/></svg>';
+    locTitle = `Gimnasio — Entrada "${piso_ent}"`;
+    locDetail = `Usá la <strong>Entrada "${piso_ent}"</strong> del Gimnasio · Zona ${zona_aula}`;
+  } else {
+    headerBg = '#1e40af';
+    locBg = '#eff6ff'; locBorder = '#3b82f6'; locTextDark = '#1e3a8a'; locTextMid = '#1d4ed8';
+    iconHTML = '<svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3M9 7h1m-1 4h1m4-4h1m-1 4h1M9 21v-3a3 3 0 016 0v3"/></svg>';
+    locTitle = `Edificio R — ${piso_ent}° Piso`;
+    locDetail = `<strong>${zona_aula}</strong>`;
+  }
+
+  const fullName = [paterno, materno, nombres].filter(Boolean).join(' ');
+
+  res.innerHTML = \`
+    <div class="result">
+      <div class="result-header" style="background:\${headerBg}">
+        <div class="icon-circle" style="background:rgba(255,255,255,0.2)">\${iconHTML}</div>
+        <div>
+          <div class="person-name">\${fullName}</div>
+          <div class="dni-label">DNI \${dni}</div>
+        </div>
+      </div>
+      <div class="result-body">
+        <div class="info-row">
+          <span class="info-label">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#888" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M9 9h6M9 13h6M9 17h4"/></svg>
+            Mesa N°
+          </span>
+          <span class="info-value">\${mesa}</span>
+        </div>
+        <div class="loc-box" style="background:\${locBg};border:1px solid \${locBorder}">
+          <div class="loc-title" style="color:\${locTextDark}">\${locTitle}</div>
+          <div class="loc-detail" style="color:\${locTextMid}">\${locDetail}</div>
+        </div>
+      </div>
+    </div>
+    <div class="reset-row">
+      <button class="reset-btn" onclick="resetear()">↩ Nueva consulta</button>
+    </div>
+  \`;
+}
+
+function resetear(){
+  document.getElementById('resultado').innerHTML = '';
+  document.getElementById('hint').textContent = 'Ingresá tu DNI y presioná buscar';
+  document.getElementById('dni').value = '';
+  document.getElementById('dni').focus();
+}
+
+function err(msg){
+  return \`<div class="error-box"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#b91c1c" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4M12 16h.01"/></svg><div>\${msg}</div></div>\`;
+}
+</script>
+</body>
+</html>
